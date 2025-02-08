@@ -1,4 +1,6 @@
+using inventory_api.src.core.model_context;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +19,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
     };
 });
 builder.Services.AddAuthorization();
+
+builder.Services.AddDbContext<InventoryManagementContext>(opt =>
+{
+    opt.UseSqlServer(builder.Configuration.GetConnectionString("InventoryManagementContext") ?? "");
+});
 
 var app = builder.Build();
 
