@@ -7,21 +7,21 @@ public partial class Product
 {
     public int ProductId { get; set; }
 
-    public string Code { get; set; } = null!;
+    public string ProductName { get; set; } = null!;
 
-    public string Description { get; set; } = null!;
+    public string? Description { get; set; }
 
-    public double ProductWeight { get; set; }
+    public decimal Price { get; set; }
 
-    public string Warehouse { get; set; } = null!;
+    public int StockQuantity { get; set; }
 
-    public int Stock { get; set; }
+    public int? CategoryId { get; set; }
 
-    public int UnitMeasureId { get; set; }
+    public int? SupplierId { get; set; }
 
-    public virtual ICollection<ProductEntry> ProductEntries { get; set; } = new List<ProductEntry>();
+    public virtual Category? Category { get; set; }
 
-    public virtual ICollection<ProductOutput> ProductOutputs { get; set; } = new List<ProductOutput>();
+    public virtual ICollection<InventoryTransaction> InventoryTransactions { get; set; } = new List<InventoryTransaction>();
 
-    public virtual UnitMeasure UnitMeasure { get; set; } = null!;
+    public virtual Supplier? Supplier { get; set; }
 }

@@ -12,147 +12,95 @@ public partial class InventoryManagementContext : IdentityDbContext<User>
     public InventoryManagementContext(DbContextOptions<InventoryManagementContext> options)
         : base(options) { }
 
-    public virtual DbSet<Company> Companies { get; set; }
+    public virtual DbSet<Category> Categories { get; set; }
 
-    public virtual DbSet<Permission> Permissions { get; set; }
+    public virtual DbSet<InventoryTransaction> InventoryTransactions { get; set; }
 
     public virtual DbSet<Product> Products { get; set; }
 
-    public virtual DbSet<ProductEntry> ProductEntries { get; set; }
-
-    public virtual DbSet<ProductOutput> ProductOutputs { get; set; }
-
-    public virtual DbSet<UnitMeasure> UnitMeasures { get; set; }
+    public virtual DbSet<Supplier> Suppliers { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Company>(entity =>
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Category>(entity =>
         {
-            entity.ToTable("Company");
+            entity.HasKey(e => e.CategoryId).HasName("PK__Categori__19093A2B3EDC15A3");
 
-            entity.HasIndex(e => e.Ruc, "UQ__Company__CAF03673ADCD5AE3").IsUnique();
-
-            entity.Property(e => e.Address).HasMaxLength(255).IsUnicode(false);
-            entity.Property(e => e.BusinessName).HasMaxLength(100).IsUnicode(false);
-            entity.Property(e => e.Ruc).HasMaxLength(20).IsUnicode(false);
+            entity.Property(e => e.CategoryId).HasColumnName("CategoryID");
+            entity.Property(e => e.CategoryName).HasMaxLength(100);
         });
 
-        modelBuilder.Entity<Permission>(entity =>
+        modelBuilder.Entity<InventoryTransaction>(entity =>
         {
-            entity.ToTable("Permission");
+            entity.HasKey(e => e.TransactionId).HasName("PK__Inventor__55433A4BE660F40A");
 
-            entity.Property(e => e.Description).HasMaxLength(100).IsUnicode(false);
+            entity.Property(e => e.TransactionId).HasColumnName("TransactionID");
+            entity.Property(e => e.ProductId).HasColumnName("ProductID");
+            entity.Property(e => e.TransactionDate).HasColumnType("datetime");
+            entity.Property(e => e.TransactionType).HasMaxLength(50);
+            entity.Property(e => e.UserId).HasColumnName("UserID");
+
+            entity
+                .HasOne(d => d.Product)
+                .WithMany(p => p.InventoryTransactions)
+                .HasForeignKey(d => d.ProductId)
+                .HasConstraintName("FK__Inventory__Produ__412EB0B6");
+
+            entity
+                .HasOne(d => d.User)
+                .WithMany(p => p.InventoryTransactions)
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("FK__Inventory__UserI__4222D4EF");
         });
 
         modelBuilder.Entity<Product>(entity =>
         {
-            entity.ToTable("Product");
+            entity.HasKey(e => e.ProductId).HasName("PK__Products__B40CC6ED9C2BF638");
 
-            entity.HasIndex(e => e.Code, "UQ__Product__A25C5AA734D5C967").IsUnique();
-
-            entity.Property(e => e.Code).HasMaxLength(50).IsUnicode(false);
-            entity.Property(e => e.Description).HasMaxLength(255).IsUnicode(false);
-            entity.Property(e => e.Warehouse).HasMaxLength(50).IsUnicode(false);
+            entity.Property(e => e.ProductId).HasColumnName("ProductID");
+            entity.Property(e => e.CategoryId).HasColumnName("CategoryID");
+            entity.Property(e => e.Description).HasMaxLength(255);
+            entity.Property(e => e.Price).HasColumnType("decimal(10, 2)");
+            entity.Property(e => e.ProductName).HasMaxLength(100);
+            entity.Property(e => e.SupplierId).HasColumnName("SupplierID");
 
             entity
-                .HasOne(d => d.UnitMeasure)
+                .HasOne(d => d.Category)
                 .WithMany(p => p.Products)
-                .HasForeignKey(d => d.UnitMeasureId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_UnitMeasure_Product");
+                .HasForeignKey(d => d.CategoryId)
+                .HasConstraintName("FK__Products__Catego__3B75D760");
+
+            entity
+                .HasOne(d => d.Supplier)
+                .WithMany(p => p.Products)
+                .HasForeignKey(d => d.SupplierId)
+                .HasConstraintName("FK__Products__Suppli__3C69FB99");
         });
 
-        modelBuilder.Entity<ProductEntry>(entity =>
+        modelBuilder.Entity<Supplier>(entity =>
         {
-            entity.HasKey(e => e.EntryId).HasName("PK_Entry");
+            entity.HasKey(e => e.SupplierId).HasName("PK__Supplier__4BE666944F65495C");
 
-            entity.ToTable("ProductEntry");
-
-            entity.HasIndex(e => e.DocumentNumber, "UQ__ProductE__6899391894054452").IsUnique();
-
-            entity.Property(e => e.ClientDocument).HasMaxLength(50).IsUnicode(false);
-            entity.Property(e => e.ClientName).HasMaxLength(100).IsUnicode(false);
-            entity.Property(e => e.DocumentNumber).HasMaxLength(50).IsUnicode(false);
-            entity.Property(e => e.Warehouse).HasMaxLength(50).IsUnicode(false);
-
-            entity
-                .HasOne(d => d.Company)
-                .WithMany(p => p.ProductEntries)
-                .HasForeignKey(d => d.CompanyId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Entry_Company");
-
-            entity
-                .HasOne(d => d.Product)
-                .WithMany(p => p.ProductEntries)
-                .HasForeignKey(d => d.ProductId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Entry_Product");
-
-            entity
-                .HasOne(d => d.RegisteredByNavigation)
-                .WithMany(p => p.ProductEntries)
-                .HasForeignKey(d => d.RegisteredBy)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Entry_User");
-        });
-
-        modelBuilder.Entity<ProductOutput>(entity =>
-        {
-            entity.HasKey(e => e.ProductOutputsId).HasName("PK_Product_Outputs");
-
-            entity.HasIndex(e => e.DocumentNumber, "UQ__ProductO__689939182DC13B32").IsUnique();
-
-            entity.Property(e => e.ClientDocument).HasMaxLength(50).IsUnicode(false);
-            entity.Property(e => e.ClientName).HasMaxLength(100).IsUnicode(false);
-            entity.Property(e => e.DocumentNumber).HasMaxLength(50).IsUnicode(false);
-            entity.Property(e => e.Warehouse).HasMaxLength(50).IsUnicode(false);
-
-            entity
-                .HasOne(d => d.Product)
-                .WithMany(p => p.ProductOutputs)
-                .HasForeignKey(d => d.ProductId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Exit_Product");
-
-            entity
-                .HasOne(d => d.RegisteredByNavigation)
-                .WithMany(p => p.ProductOutputs)
-                .HasForeignKey(d => d.RegisteredBy)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Exit_User");
-        });
-
-        modelBuilder.Entity<UnitMeasure>(entity =>
-        {
-            entity.ToTable("UnitMeasure");
-
-            entity.HasIndex(e => e.Name, "UQ__UnitMeas__737584F6E3E3348A").IsUnique();
-
-            entity.Property(e => e.Name).HasMaxLength(20).IsUnicode(false);
+            entity.Property(e => e.SupplierId).HasColumnName("SupplierID");
+            entity.Property(e => e.Address).HasMaxLength(255);
+            entity.Property(e => e.ContactName).HasMaxLength(100);
+            entity.Property(e => e.Email).HasMaxLength(100);
+            entity.Property(e => e.Phone).HasMaxLength(15);
+            entity.Property(e => e.SupplierName).HasMaxLength(100);
         });
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.ToTable("User");
-
-            entity.HasIndex(e => e.Username, "UQ__User__536C85E4B690AA6C").IsUnique();
-
-            entity.HasIndex(e => e.DocumentNumber, "UQ__User__689939180534C214").IsUnique();
-
-            entity.Property(e => e.DocumentNumber).HasMaxLength(20).IsUnicode(false);
-            entity.Property(e => e.FullName).HasMaxLength(100).IsUnicode(false);
-            entity.Property(e => e.PasswordHash).HasMaxLength(255).IsUnicode(false);
-            entity.Property(e => e.Username).HasMaxLength(50).IsUnicode(false);
-
-            entity
-                .HasOne(d => d.Permission)
-                .WithMany(p => p.Users)
-                .HasForeignKey(d => d.PermissionId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_User_Permission");
+            entity.HasKey(e => e.Id).HasName("PK__Users__1788CCAC8DB77EC9");
+            entity.Property(e => e.Id).HasColumnName("UserID");
+            entity.Property(e => e.Email).HasMaxLength(100);
+            entity.Property(e => e.PasswordHash).HasMaxLength(255);
+            entity.Property(e => e.Role).HasMaxLength(50);
+            entity.Property(e => e.UserName).HasMaxLength(100);
         });
 
         OnModelCreatingPartial(modelBuilder);

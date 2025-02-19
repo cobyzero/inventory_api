@@ -6,7 +6,7 @@ public class ResponseUtil
         {
             data = data,
             message = message,
-            success = true
+            success = true,
         };
     }
 
@@ -16,14 +16,14 @@ public class ResponseUtil
         {
             data = data,
             message = message,
-            success = false
+            success = false,
         };
     }
 }
 
 public class ResponseModel
 {
-    public required object data { get; set; }
+    public required object? data { get; set; }
     public required object message { get; set; }
     public required bool success { get; set; }
 }

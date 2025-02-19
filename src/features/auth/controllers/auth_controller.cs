@@ -33,9 +33,7 @@ public class AuthController : ControllerBase
                 return Ok(ResponseUtil.Error(null, "Invalid email or password"));
             }
             var jwtUtil = new JwtUtil(_configuration);
-            return Ok(
-                ResponseUtil.Success(jwtUtil.GenerateToken(user.Username), "Login successful")
-            );
+            return Ok(ResponseUtil.Success(jwtUtil.GenerateToken(user.Email), "Login successful"));
         }
         catch (System.Exception e)
         {
@@ -48,14 +46,7 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var user = new User
-            {
-                Username = model.Username,
-                FullName = model.Name,
-                DocumentNumber = model.DocumentNumber,
-                PasswordHash = model.Password,
-                PermissionId = model.PermissionId,
-            };
+            var user = new User { PasswordHash = model.Password };
             var userProtected = _userManager.CreateAsync(user, model.Password).Result;
 
             if (!userProtected.Succeeded)
