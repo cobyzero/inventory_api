@@ -23,17 +23,25 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
-    public IActionResult Login([FromBody] LoginRequestModel model)
+    public async Task<IActionResult> Login([FromBody] LoginRequestModel model)
     {
         try
         {
             var user = _userManager.FindByEmailAsync(model.Username).Result;
             if (user == null)
             {
-                return Ok(ResponseUtil.Error(null, "Invalid email or password"));
+                return Ok(ResponseUtil.Error(null, "User not found"));
             }
+
+            if (!await _userManager.CheckPasswordAsync(user, model.Password))
+            {
+                return Ok(ResponseUtil.Error(null, "Invalid user or password"));
+            }
+
             var jwtUtil = new JwtUtil(_configuration);
-            return Ok(ResponseUtil.Success(jwtUtil.GenerateToken(user.Email), "Login successful"));
+            return Ok(
+                ResponseUtil.Success(jwtUtil.GenerateToken(user.Email ?? ""), "Login successful")
+            );
         }
         catch (System.Exception e)
         {
@@ -42,23 +50,34 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
-    public IActionResult Register([FromBody] RegisterRequestModel model)
+    public async Task<IActionResult> Register([FromBody] RegisterRequestModel model)
     {
         try
         {
-            var user = new User { PasswordHash = model.Password };
-            var userProtected = _userManager.CreateAsync(user, model.Password).Result;
+            var user = new User
+            {
+                Email = model.Username,
+                UserName = model.Username,
+                Name = model.Name,
+                DocumentNumber = model.DocumentNumber,
+            };
+            var userProtected = await _userManager.CreateAsync(user, model.Password);
 
             if (!userProtected.Succeeded)
             {
-                return Ok(ResponseUtil.Error(null, "Something went wrong"));
+                return Ok(
+                    ResponseUtil.Error(
+                        null,
+                        userProtected.Errors.FirstOrDefault()?.Description ?? "Something went wrong"
+                    )
+                );
             }
 
             return Ok(ResponseUtil.Success(userProtected, "Register successful"));
         }
-        catch (System.Exception)
+        catch (System.Exception e)
         {
-            return Ok(ResponseUtil.Error(null, "Something went wrong"));
+            return Ok(ResponseUtil.Error(null, "Error: " + e.Message));
         }
     }
 }

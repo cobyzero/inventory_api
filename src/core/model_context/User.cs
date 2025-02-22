@@ -7,7 +7,8 @@ namespace inventory_api.src.core.model_context;
 
 public partial class User : IdentityUser
 {
-    public string Role { get; set; } = null!;
+    public required string Name { get; set; }
+    public required string DocumentNumber { get; set; }
 
     public virtual ICollection<InventoryTransaction> InventoryTransactions { get; set; } =
         new List<InventoryTransaction>();
