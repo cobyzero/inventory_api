@@ -31,7 +31,14 @@ builder.Services.AddDbContext<InventoryManagementContext>(opt =>
 });
 
 builder
-    .Services.AddIdentity<User, IdentityRole>()
+    .Services.AddIdentity<User, IdentityRole>(o =>
+    {
+        o.Password.RequireDigit = false;
+        o.Password.RequireLowercase = false;
+        o.Password.RequireUppercase = false;
+        o.Password.RequireNonAlphanumeric = false;
+        o.Password.RequiredLength = 6;
+    })
     .AddEntityFrameworkStores<InventoryManagementContext>()
     .AddDefaultTokenProviders();
 
